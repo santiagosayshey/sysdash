@@ -4,7 +4,7 @@
 dev:
 	@cd backend && go mod tidy
 	@trap 'kill 0' EXIT; \
-	cd backend && go run . & \
+	air & \
 	cd frontend && npm run dev
 
 dev-frontend:
@@ -30,11 +30,15 @@ build-linux-amd64: build-frontend
 build-linux-arm64: build-frontend
 	cd backend && GOOS=linux GOARCH=arm64 go build -o ../sysdash-linux-arm64 .
 
+build-windows: build-frontend
+	cd backend && GOOS=windows GOARCH=amd64 go build -o ../sysdash-windows-amd64.exe .
+
 build-all: build-frontend
 	cd backend && GOOS=linux GOARCH=amd64 go build -o ../sysdash-linux-amd64 .
 	cd backend && GOOS=linux GOARCH=arm64 go build -o ../sysdash-linux-arm64 .
 	cd backend && GOOS=darwin GOARCH=amd64 go build -o ../sysdash-darwin-amd64 .
 	cd backend && GOOS=darwin GOARCH=arm64 go build -o ../sysdash-darwin-arm64 .
+	cd backend && GOOS=windows GOARCH=amd64 go build -o ../sysdash-windows-amd64.exe .
 
 # Clean build artifacts
 clean:

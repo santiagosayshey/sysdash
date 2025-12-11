@@ -1,1 +1,9 @@
 @import "tailwindcss";
+
+@font-face {
+  font-family: "0xProto";
+  src: url("https://db.onlinewebfonts.com/t/e8e7a20efd02fd010b6634a4d4cfbc8b.woff2") format("woff2"),
+       url("https://db.onlinewebfonts.com/t/e8e7a20efd02fd010b6634a4d4cfbc8b.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
