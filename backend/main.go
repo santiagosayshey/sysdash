@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -21,10 +22,39 @@ import (
 //go:embed static/*
 var staticFiles embed.FS
 
+// Config holds all configuration options
+type Config struct {
+	Port           string
+	DiskPath       string
+	UpdateInterval time.Duration
+	Hostname       string
+}
+
+var config Config
+
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true // Allow all origins for dev
 	},
+}
+
+func loadConfig() {
+	config.Port = getEnv("PORT", "8080")
+	config.DiskPath = getEnv("DISK_PATH", "/")
+	config.Hostname = getEnv("HOSTNAME", "")
+
+	intervalSec, _ := strconv.Atoi(getEnv("UPDATE_INTERVAL", "1"))
+	if intervalSec < 1 {
+		intervalSec = 1
+	}
+	config.UpdateInterval = time.Duration(intervalSec) * time.Second
+}
+
+func getEnv(key, fallback string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return fallback
 }
 
 type Stats struct {
@@ -64,7 +94,10 @@ type NetStats struct {
 }
 
 func getStats() (*Stats, error) {
-	hostname, _ := os.Hostname()
+	hostname := config.Hostname
+	if hostname == "" {
+		hostname, _ = os.Hostname()
+	}
 
 	hostInfo, err := host.Info()
 	if err != nil {
@@ -81,7 +114,7 @@ func getStats() (*Stats, error) {
 		return nil, err
 	}
 
-	diskInfo, err := disk.Usage("/")
+	diskInfo, err := disk.Usage(config.DiskPath)
 	if err != nil {
 		return nil, err
 	}
@@ -162,17 +195,16 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		time.Sleep(1 * time.Second)
+		time.Sleep(config.UpdateInterval)
 	}
 
 	log.Printf("Client disconnected")
 }
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+	loadConfig()
+
+	log.Printf("Config: port=%s disk=%s interval=%s", config.Port, config.DiskPath, config.UpdateInterval)
 
 	// API routes
 	http.HandleFunc("/api/stats", handleStats)
@@ -185,6 +217,6 @@ func main() {
 	}
 	http.Handle("/", http.FileServer(http.FS(staticFS)))
 
-	log.Printf("Starting server on :%s", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Printf("Starting server on :%s", config.Port)
+	log.Fatal(http.ListenAndServe(":"+config.Port, nil))
 }

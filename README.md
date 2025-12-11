@@ -39,10 +39,21 @@ Copy the binary to your target machine and run:
 ./sysdash
 ```
 
-Runs on port 8080 by default. Set `PORT` env var to change:
+## Configuration
+
+Configure via environment variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `8080` | HTTP server port |
+| `DISK_PATH` | `/` | Disk path to monitor |
+| `UPDATE_INTERVAL` | `1` | Seconds between WebSocket updates |
+| `HOSTNAME` | (auto) | Override displayed hostname |
+
+Example:
 
 ```bash
-PORT=3000 ./sysdash
+PORT=3000 DISK_PATH=/mnt/media HOSTNAME="Plex Server" ./sysdash
 ```
 
 ## API
